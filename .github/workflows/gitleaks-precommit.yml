@@ -1,0 +1,42 @@
+name: gitleaks-precommit
+
+# 场景一：pre-commit 集成
+# 触发：手动 / push 到 main
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+  id-token: write # upload-sarif-action OIDC 免密换证必需
+
+jobs:
+  pre-commit:
+    name: pre-commit - SARIF - 上传
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: setup-python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      # 钩子内直接调用随仓提交的 gitleaks 二进制，输出 SARIF 到工作区根目录
+      # report-dir 保留默认值；sarif-file 显式指定后优先于日志兜底解析
+      - name: run pre-commit (generate sarif)
+        id: pre-commit
+        uses: openlibing-test/pre-commit-action@main
+        with:
+          report-dir: /tmp/pre-commit-reports/
+          sarif-file: gitleaks.sarif
+
+      - name: upload sarif reports
+        if: ${{ always() }}
+        uses: openlibing-test/upload-sarif-action@source-platform-detection
+        with:
+          sarif_file: ${{ steps.pre-commit.outputs.sarif-files }}
+          category: pre-commit-report
+          env_type: beta

@@ -1,0 +1,47 @@
+name: gitleaks-scan
+
+# 场景二：workflow 全量扫描
+# 触发：手动 / push 到 main
+# 说明：pull_request 未默认开启，Fork PR 拿不到 OIDC id-token，上传必然失败；
+#      如需 PR 门禁，请另建同仓分支 PR 场景并加同仓校验。
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+  id-token: write # upload-sarif-action OIDC 免密换证必需，缺失会报缺少 ACTIONS_ID_TOKEN_REQUEST_URL
+
+jobs:
+  gitleaks-scan:
+    name: Gitleaks 全量扫描 - SARIF - 上传
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # 离线二进制随仓提交，运行时不 curl GitHub Release，避免执行机无法访问外网
+      - name: 检查 gitleaks 版本
+        run: |
+          chmod +x .github/bin/gitleaks
+          .github/bin/gitleaks version
+
+      # gitleaks 原生输出 SARIF v2.1.0
+      # || true 保证检出泄露时仍继续上传（失败语义：扫描结果不等于流水线失败）
+      - name: 运行 Gitleaks 扫描
+        run: |
+          mkdir -p sarif
+          .github/bin/gitleaks dir . --config .gitleaks.toml --verbose \
+            --report-format sarif \
+            --report-path sarif/gitleaks.sarif \
+            || echo "gitleaks found leaks, continuing to upload SARIF"
+
+      - name: Upload SARIF to openLiBing
+        if: ${{ always() }}
+        uses: openlibing-test/upload-sarif-action@source-platform-detection
+        with:
+          sarif_file: sarif/gitleaks.sarif
+          source_path: .
+          category: gitleaks-scan
+          env_type: beta

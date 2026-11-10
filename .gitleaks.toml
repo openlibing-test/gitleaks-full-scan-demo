@@ -1,0 +1,22 @@
+title = "openLiBing GitHub demo config"
+
+# 继承 gitleaks 全部内置规则（100+ 云平台/服务凭据规则），再叠加下方自定义演示规则
+[extend]
+useDefault = true
+
+# 演示规则：仅用于验证「本地扫描 -> SARIF -> openLiBing 平台」链路是否打通
+# 真实仓库接入时请删除本规则，改用内置规则或项目自定义规则
+[[rules]]
+id = "openlibing-demo-token"
+description = "openLiBing demo token (fabricated, scan-path verification only)"
+regex = '''demo_secret_[A-Za-z0-9]{32}'''
+tags = ["demo", "token"]
+
+# 全局允许列表：跳过二进制目录与扫描产物，避免自扫描产生二次告警
+[[allowlists]]
+description = "skip binaries and scan artifacts"
+paths = [
+  '''^\.github/bin/''',
+  '''^gitleaks\.sarif$''',
+  '''^sarif/''',
+]

@@ -1,0 +1,4 @@
+gitleaks.sarif
+sarif/
+.pytest_cache/
+__pycache__/
