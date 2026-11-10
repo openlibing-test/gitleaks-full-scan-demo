@@ -55,7 +55,7 @@ pre-commit run --all-files
 | Actions 运行状态 | 两条工作流均 success（扫描发现泄露不使 job 失败） |
 | 日志-来源标记 | `[INFO] 来源标记: GITHUB_ACTION` |
 | 日志-换证 | 提供商 `GitHubActions`、委托 `github-actions` |
-| OBS | 桶 `openlibing-github-action`，key 含 `{owner}/{repo}/{runId}` |
+| OBS | 桶 `openlibing-github-action`，key 形如 `gitleaks-results/<repo>/<yyyymmdd.hh>/<runId>/gitleaks.sarif` |
 | 回调 | `/codescan/v1/result/receive` 返回 `{"code":200,"msg":"success"}` |
 | 前端 | beta 代码检查页筛选 GitHub 平台可见 `openlibing-demo-token` 告警 |
 
