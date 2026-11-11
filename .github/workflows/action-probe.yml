@@ -57,3 +57,30 @@ jobs:
           source_path: .
           category: action-probe
           env_type: beta
+
+  # 用 GitCode 主线（含双平台适配 + node24 声明）的同一份构建产物，
+  # 以本地 action 形式在 GitHub 上执行，验证“一套代码两端可用”
+  upload-sarif-gitcode-dual:
+    name: upload-sarif (gitcode build) end-to-end
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: 运行 Gitleaks 扫描
+        run: |
+          chmod +x .github/bin/gitleaks
+          mkdir -p sarif-dual
+          .github/bin/gitleaks dir . --config .gitleaks.toml --verbose \
+            --report-format sarif \
+            --report-path sarif-dual/gitleaks.sarif \
+            || echo "gitleaks found leaks, continuing to upload SARIF"
+
+      - name: Upload SARIF via GitCode build
+        if: ${{ always() }}
+        uses: ./.github/actions/upload-sarif-gh
+        with:
+          sarif_file: sarif-dual/gitleaks.sarif
+          source_path: .
+          category: action-probe-gitcode-build
+          env_type: beta
