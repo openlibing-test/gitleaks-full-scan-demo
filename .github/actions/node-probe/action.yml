@@ -1,0 +1,5 @@
+name: node24-probe
+description: 打印 action 进程实际使用的 Node 版本，用于验证 runs.using node24 是否生效
+runs:
+  using: node24
+  main: index.js
