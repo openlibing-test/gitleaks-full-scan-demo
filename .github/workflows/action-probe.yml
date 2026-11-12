@@ -31,10 +31,8 @@ jobs:
 
   upload-sarif:
     name: upload-sarif-action end-to-end
-    # 本仓已改为 public，public 仓 workflow 无法解析私有仓 openlibing-test/upload-sarif-action
-    # 的 action 引用（Unable to resolve action），该对照 job 暂时禁用；双平台验证由
-    # upload-sarif-gitcode-dual（本地 action 形式）承担。
-    if: ${{ false }}
+    # 通过真实 action 引用验证：本仓为 private，可解析同组织私有仓
+    # openlibing-test/test-upload-sarif-action（GitCode 双平台版本的镜像）
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -55,7 +53,7 @@ jobs:
 
       - name: Upload SARIF to openLiBing
         if: ${{ always() }}
-        uses: openlibing-test/upload-sarif-action@source-platform-detection
+        uses: openlibing-test/test-upload-sarif-action@main
         with:
           sarif_file: sarif/gitleaks.sarif
           source_path: .
